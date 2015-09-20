@@ -2,6 +2,9 @@ package main
 
 import (
 	"log"
+	"net/http"
+
+	"github.com/codegangsta/negroni"
 
 	"gopkg.in/mgo.v2"
 )
@@ -26,6 +29,19 @@ func init() {
 }
 func main() {
 	defer config.session.Close()
+
+	// Negroni Classic has Recovery, Logger and Static.
+	// We don't need static file serving in API.
+	n := negroni.New()
+	n.Use(negroni.NewRecovery())
+	n.Use(negroni.NewLogger())
+
+	err := http.ListenAndServe(":3000", n)
+	if err != nil {
+		log.Fatalln(err)
+		panic(err)
+	}
+
 	log.Println("App initialized...")
 	return
 }
