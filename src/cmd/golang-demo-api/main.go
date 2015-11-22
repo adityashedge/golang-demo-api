@@ -5,9 +5,12 @@ import (
 	"net/http"
 
 	"github.com/codegangsta/negroni"
+	"github.com/gorilla/mux"
 
 	"gopkg.in/mgo.v2"
 )
+
+const perPage int = 20
 
 var config struct {
 	env             string
@@ -24,9 +27,25 @@ func init() {
 		panic(err)
 	}
 	config.session = session
-	config.db = config.session.DB("golang_demo_api" + config.env)
+	config.db = config.session.DB("golang_demo_api_" + config.env)
 	config.usersCollection = config.db.C("users")
 }
+
+type ModelErrors map[string][]string
+
+type response struct {
+	Message string `json:"message,omitempty"`
+	*data   `json:"data,omitempty"`
+}
+
+type data struct {
+	Users  `json:"users,omitempty"`
+	*user  `json:"user,omitempty"`
+	Errors ModelErrors `json:"errors,omitempty"`
+}
+
+var router = mux.NewRouter().StrictSlash(false)
+
 func main() {
 	defer config.session.Close()
 
@@ -35,13 +54,14 @@ func main() {
 	n := negroni.New()
 	n.Use(negroni.NewRecovery())
 	n.Use(negroni.NewLogger())
+	n.UseHandler(router)
+
+	log.Println("App initialized...")
 
 	err := http.ListenAndServe(":3000", n)
 	if err != nil {
 		log.Fatalln(err)
 		panic(err)
 	}
-
-	log.Println("App initialized...")
 	return
 }

@@ -8,10 +8,31 @@
 			"branch": "master"
 		},
 		{
+			"importpath": "golang.org/x/crypto/bcrypt",
+			"repository": "https://go.googlesource.com/crypto",
+			"revision": "beef0f4390813b96e8e68fd78570396d0f4751fc",
+			"branch": "master",
+			"path": "/bcrypt"
+		},
+		{
+			"importpath": "golang.org/x/crypto/blowfish",
+			"repository": "https://go.googlesource.com/crypto",
+			"revision": "beef0f4390813b96e8e68fd78570396d0f4751fc",
+			"branch": "master",
+			"path": "/blowfish"
+		},
+		{
 			"importpath": "gopkg.in/mgo.v2",
 			"repository": "https://gopkg.in/mgo.v2",
-			"revision": "22287bab4379e1fbf6002fb4eb769888f3fb224c",
+			"revision": "4d04138ffef2791c479c0c8bbffc30b34081b8d9",
 			"branch": "v2"
+		},
+		{
+			"importpath": "gopkg.in/mgo.v2/bson",
+			"repository": "https://gopkg.in/mgo.v2",
+			"revision": "4d04138ffef2791c479c0c8bbffc30b34081b8d9",
+			"branch": "v2",
+			"path": "/bson"
 		},
 		{
 			"importpath": "gopkg.in/tomb.v2",
