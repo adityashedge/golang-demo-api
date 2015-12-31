@@ -49,8 +49,16 @@ func usersHandler(w http.ResponseWriter, req *http.Request) {
 	}
 	config.usersCollection.Find(bson.M{}).Sort("-created_at").Limit(perPage).Skip(offset).All(&users)
 
+	total_users, err := config.usersCollection.Find(bson.M{}).Count()
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	resp := response{
 		data: &data{
+			Total: total_users,
 			Users: users,
 		},
 	}

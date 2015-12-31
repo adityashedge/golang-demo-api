@@ -39,6 +39,7 @@ type response struct {
 }
 
 type data struct {
+	Total  int `json:"total,omitempty"`
 	Users  `json:"users,omitempty"`
 	*user  `json:"user,omitempty"`
 	Errors ModelErrors `json:"errors,omitempty"`
