@@ -275,7 +275,7 @@ func deleteUserHandler(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	encoder := json.NewEncoder(w)
 	var resp *response
-	var objectId bson.ObjectId
+	var objectID bson.ObjectId
 
 	// valid bson id
 	if valid := bson.IsObjectIdHex(vars["id"]); !valid {
@@ -284,9 +284,9 @@ func deleteUserHandler(w http.ResponseWriter, req *http.Request) {
 		resp = &response{Message: "User not found.", data: nil}
 		w.WriteHeader(422)
 	} else {
-		objectId = bson.ObjectIdHex(vars["id"])
+		objectID = bson.ObjectIdHex(vars["id"])
 		// delete user
-		if err := config.usersCollection.RemoveId(objectId); err != nil {
+		if err := config.usersCollection.RemoveId(objectID); err != nil {
 			log.Println(err)
 
 			resp = &response{Message: "Unable to delete user.", data: nil}
@@ -304,14 +304,14 @@ func deleteUserHandler(w http.ResponseWriter, req *http.Request) {
 
 func loadUser(id string) (*user, error) {
 	var u user
-	var objectId bson.ObjectId
+	var objectID bson.ObjectId
 
 	if valid := bson.IsObjectIdHex(id); !valid {
 		return &u, errors.New("Invalid user id.")
 	} else {
-		objectId = bson.ObjectIdHex(id)
+		objectID = bson.ObjectIdHex(id)
 	}
 
-	err := config.usersCollection.FindId(objectId).One(&u)
+	err := config.usersCollection.FindId(objectID).One(&u)
 	return &u, err
 }

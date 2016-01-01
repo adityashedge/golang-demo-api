@@ -11,7 +11,7 @@ import (
 )
 
 type user struct {
-	Id                   bson.ObjectId `bson:"_id" json:"id"`
+	ID                   bson.ObjectId `bson:"_id" json:"id"`
 	Name                 string        `bson:"name,omitempty" json:"name,omitempty"`
 	Username             string        `bson:"username,omitempty" json:"username,omitempty"`
 	Email                string        `bson:"email,omitempty" json:"email,omitempty"`
@@ -34,7 +34,7 @@ type newUser struct {
 }
 
 func (u *user) Create() error {
-	u.Id = bson.NewObjectId()
+	u.ID = bson.NewObjectId()
 
 	err := u.generatePasswordDigest()
 	if err != nil {
@@ -48,7 +48,7 @@ func (u *user) Create() error {
 	// after validation callback
 
 	// Update Timestamps
-	u.CreatedAt = u.Id.Time()
+	u.CreatedAt = u.ID.Time()
 	u.UpdatedAt = u.CreatedAt
 
 	// before create callback
@@ -77,7 +77,7 @@ func (u *user) Update(nu newUser) error {
 	u.UpdatedAt = bson.Now()
 
 	// before update callback
-	err := config.usersCollection.UpdateId(u.Id, u)
+	err := config.usersCollection.UpdateId(u.ID, u)
 	// after update callback
 	return err
 }
@@ -97,7 +97,7 @@ func (u *user) Valid() bool {
 	if u.Username == "" {
 		userErrors["username"] = append(userErrors["username"], "can't be blank")
 	} else {
-		n, _ := config.usersCollection.Find(bson.M{"_id": bson.M{"$ne": u.Id}, "username": u.Username}).Count()
+		n, _ := config.usersCollection.Find(bson.M{"_id": bson.M{"$ne": u.ID}, "username": u.Username}).Count()
 		if n > 0 {
 			userErrors["username"] = append(userErrors["username"], "is already taken")
 		}
@@ -105,7 +105,7 @@ func (u *user) Valid() bool {
 	if u.Email == "" {
 		userErrors["email"] = append(userErrors["email"], "can't be blank")
 	} else {
-		n, _ := config.usersCollection.Find(bson.M{"_id": bson.M{"$ne": u.Id}, "email": u.Email}).Count()
+		n, _ := config.usersCollection.Find(bson.M{"_id": bson.M{"$ne": u.ID}, "email": u.Email}).Count()
 		if n > 0 {
 			userErrors["email"] = append(userErrors["email"], "is already taken")
 		}
