@@ -2,7 +2,10 @@ package main
 
 import (
 	"errors"
+	"log"
 	"time"
+
+	"golang.org/x/crypto/bcrypt"
 
 	"gopkg.in/mgo.v2/bson"
 )
@@ -15,25 +18,28 @@ type user struct {
 	Mobile               string        `bson:"mobile,omitempty" json:"mobile,omitempty"`
 	Password             string        `bson:"-" json:"-"`
 	PasswordConfirmation string        `bson:"-" json:"-"`
-	PasswordDigest       string        `bson:"password_digest,omitempty" json:"password_digest,omitempty"`
+	PasswordDigest       string        `bson:"password_digest,omitempty" json:"-"`
 	CreatedAt            time.Time     `bson:"created_at,omitempty" json:"created_at,omitempty"`
 	UpdatedAt            time.Time     `bson:"updated_at,omitempty" json:"updated_at,omitempty"`
 	Errors               ModelErrors   `bson:"-" json:"errors,omitempty"`
 }
 
 type newUser struct {
-	Id                   *bson.ObjectId `bson:"_id" json:"id"`
-	Name                 *string        `bson:"name,omitempty" json:"name,omitempty"`
-	Username             *string        `bson:"username,omitempty" json:"username,omitempty"`
-	Email                *string        `bson:"email,omitempty" json:"email,omitempty"`
-	Mobile               *string        `bson:"mobile,omitempty" json:"mobile,omitempty"`
-	Password             *string        `bson:"-" json:"-"`
-	PasswordConfirmation *string        `bson:"-" json:"-"`
-	Errors               ModelErrors    `bson:"-" json:"errors,omitempty"`
+	Name                 *string `bson:"name,omitempty" json:"name,omitempty"`
+	Username             *string `bson:"username,omitempty" json:"username,omitempty"`
+	Email                *string `bson:"email,omitempty" json:"email,omitempty"`
+	Mobile               *string `bson:"mobile,omitempty" json:"mobile,omitempty"`
+	Password             *string `bson:"-" json:"password,omitempty"`
+	PasswordConfirmation *string `bson:"-" json:"password_confirmation,omitempty"`
 }
 
 func (u *user) Create() error {
 	u.Id = bson.NewObjectId()
+
+	err := u.generatePasswordDigest()
+	if err != nil {
+		log.Println(err)
+	}
 
 	// before validation callback
 	if !u.Valid() {
@@ -46,23 +52,19 @@ func (u *user) Create() error {
 	u.UpdatedAt = u.CreatedAt
 
 	// before create callback
-	err := config.usersCollection.Insert(&u)
+	err = config.usersCollection.Insert(&u)
 	// after create callback
 	return err
 }
 
 func (u *user) Update(nu newUser) error {
-	if nu.Name != nil {
-		u.Name = *nu.Name
-	}
-	if nu.Username != nil {
-		u.Username = *nu.Username
-	}
-	if nu.Email != nil {
-		u.Email = *nu.Email
-	}
-	if nu.Mobile != nil {
-		u.Mobile = *nu.Mobile
+	u.copyFields(nu)
+
+	if nu.Password != nil || nu.PasswordConfirmation != nil {
+		err := u.generatePasswordDigest()
+		if err != nil {
+			log.Println(err)
+		}
 	}
 
 	// before validation callback
@@ -81,7 +83,12 @@ func (u *user) Update(nu newUser) error {
 }
 
 func (u *user) Valid() bool {
-	userErrors := make(ModelErrors)
+	var userErrors ModelErrors
+	if u.Errors != nil {
+		userErrors = u.Errors
+	} else {
+		userErrors = make(ModelErrors)
+	}
 	// Name, Username and Email are required fields
 	// Username and Email must be unique in users collection
 	if u.Name == "" {
@@ -114,4 +121,44 @@ func (u *user) Valid() bool {
 		}
 	}
 	return isValid
+}
+
+func (u *user) copyFields(nu newUser) {
+	if nu.Name != nil {
+		u.Name = *nu.Name
+	}
+	if nu.Username != nil {
+		u.Username = *nu.Username
+	}
+	if nu.Email != nil {
+		u.Email = *nu.Email
+	}
+	if nu.Mobile != nil {
+		u.Mobile = *nu.Mobile
+	}
+	if nu.Password != nil {
+		u.Password = *nu.Password
+	}
+	if nu.PasswordConfirmation != nil {
+		u.PasswordConfirmation = *nu.PasswordConfirmation
+	}
+}
+
+func (u *user) generatePasswordDigest() (err error) {
+	if u.Errors == nil {
+		u.Errors = make(ModelErrors)
+	}
+	if u.Password == "" {
+		u.Errors["password"] = append(u.Errors["password"], "Invalid Password")
+		err = errors.New("Invalid Password")
+	} else if u.Password != u.PasswordConfirmation {
+		u.Errors["password_confirmation"] = append(u.Errors["password_confirmation"], "Password and Password Confirmation do not match")
+		err = errors.New("Password and Password Confirmation do not match")
+	} else {
+		digest, err := bcrypt.GenerateFromPassword([]byte(u.Password), 0)
+		if err == nil {
+			u.PasswordDigest = string(digest)
+		}
+	}
+	return
 }

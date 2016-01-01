@@ -98,7 +98,7 @@ func createUserHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var params struct {
-		User struct{ user } `json:"user"`
+		User struct{ newUser } `json:"user"`
 	}
 
 	decoder := json.NewDecoder(req.Body)
@@ -111,22 +111,17 @@ func createUserHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	var resp *response
-	u := params.User.user
-	var nu = &user{
-		Id:       bson.NewObjectId(),
-		Name:     u.Name,
-		Username: u.Username,
-		Email:    u.Email,
-		Mobile:   u.Mobile,
-	}
+	nu := params.User.newUser
 
-	err = nu.Create()
+	var u = &user{}
+	u.copyFields(nu)
+	err = u.Create()
 	if err != nil {
 		log.Println(err)
 		resp = &response{
 			Message: "Unable to save user. Please correct the errors and try again.",
 			data: &data{
-				Errors: nu.Errors,
+				Errors: u.Errors,
 				user:   nil,
 			},
 		}
