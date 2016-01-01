@@ -50,7 +50,7 @@ func usersHandler(w http.ResponseWriter, req *http.Request) {
 	}
 	config.usersCollection.Find(bson.M{}).Sort("-created_at").Limit(perPage).Skip(offset).All(&users)
 
-	total_users, err := config.usersCollection.Find(bson.M{}).Count()
+	totalUsers, err := config.usersCollection.Find(bson.M{}).Count()
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -59,7 +59,7 @@ func usersHandler(w http.ResponseWriter, req *http.Request) {
 
 	resp := response{
 		data: &data{
-			Total: total_users,
+			Total: totalUsers,
 			Users: users,
 		},
 	}
@@ -309,10 +309,8 @@ func loadUser(id string) (*user, error) {
 
 	if valid := bson.IsObjectIdHex(id); !valid {
 		return &u, errors.New("Invalid user id.")
-	} else {
-		objectID = bson.ObjectIdHex(id)
 	}
-
+	objectID = bson.ObjectIdHex(id)
 	err := config.usersCollection.FindId(objectID).One(&u)
 	return &u, err
 }
