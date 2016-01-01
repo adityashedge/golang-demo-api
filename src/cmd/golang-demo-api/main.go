@@ -31,6 +31,7 @@ func init() {
 	config.usersCollection = config.db.C("users")
 }
 
+// ModelErrors is used to store errors associated with model fields
 type ModelErrors map[string][]string
 
 type response struct {

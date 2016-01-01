@@ -11,6 +11,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
+// Users represents a collection of user objects
 type Users []user
 
 func init() {
